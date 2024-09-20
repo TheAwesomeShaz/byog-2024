@@ -9,6 +9,8 @@ public class MazeGenerator : MonoBehaviour
     [SerializeField] private int mazeWidth;
     [SerializeField] private int mazeDepth;
 
+    [SerializeField] private GameObject playerPrefab;
+
     private MazeCell[,] mazeGrid;
 
     private void Start()
@@ -29,6 +31,27 @@ public class MazeGenerator : MonoBehaviour
             }
         }
         GenerateMaze(null, mazeGrid[0,0]);
+        SpawnPlayerAtCenter();
+    }
+
+    private void SpawnPlayerAtCenter()
+    {
+        // Calculate the center indices of the maze grid
+        int centerX = mazeWidth / 2;
+        int centerZ = mazeDepth / 2;
+
+        // Get the corresponding cell in the center
+        MazeCell centerCell = mazeGrid[centerX, centerZ];
+
+        // Get the center position of the cell (use its position)
+        Vector3 centerPosition = new Vector3(
+            centerCell.transform.position.x,
+            centerCell.transform.position.y,  // Adjust based on level design
+            centerCell.transform.position.z
+        );
+
+        // Instantiate the player at the center position
+        Instantiate(playerPrefab, centerPosition, Quaternion.identity);
     }
 
     private void GenerateMaze(MazeCell previousCell, MazeCell currentCell)
