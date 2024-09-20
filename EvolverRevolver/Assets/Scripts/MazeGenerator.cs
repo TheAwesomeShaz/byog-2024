@@ -51,7 +51,7 @@ public class MazeGenerator : MonoBehaviour
         );
 
         // Instantiate the player at the center position
-        Instantiate(playerPrefab, centerPosition, Quaternion.identity);
+        playerPrefab.transform.position = centerPosition;
     }
 
     private void GenerateMaze(MazeCell previousCell, MazeCell currentCell)
