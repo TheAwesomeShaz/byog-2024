@@ -25,6 +25,7 @@ public class PlayerController : MonoBehaviour
 
     MousePosition currentMousePosition;
     private bool mousePosChanged = true;
+    private bool setToForward;
 
     private void Update()
     {
@@ -38,141 +39,15 @@ public class PlayerController : MonoBehaviour
         if(inputVector == Vector3.zero)
         {
             animator.CrossFade(idleAnimString, animationCrossfadeDuration);
+            setToForward = false;
         }
-
-        if(Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.A)|| Input.GetKeyDown(KeyCode.S)|| Input.GetKeyDown(KeyCode.D))
+        else if(!setToForward)
         {
-            // Aiming below the player
-            if (mousePos.z < transform.position.z)
-            {
-                mousePosChanged = true;
-                SetAimingBelowPlayerAnims();
-            }
-
-            // Aiming above the player
-            if (mousePos.z > transform.position.z)
-            {
-                mousePosChanged = true;
-                SetAimingAbovePlayerAnims();
-            }
-
-            // Aiming at Right of the player
-            if (mousePos.x > transform.position.x)
-            {
-                mousePosChanged = true;
-                SetAimingRightOfPlayerAnims();
-            }
-
-            // Aiming at Left of the Player
-            if (mousePos.x < transform.position.x)
-            {
-                mousePosChanged = true;
-                SetAimingLeftOfPlayerAnims();
-            }
-        }
-
-        if(Input.GetKeyUp(KeyCode.W) || Input.GetKeyUp(KeyCode.A) || Input.GetKeyUp(KeyCode.S) || Input.GetKeyUp(KeyCode.D))
-        {
-            mousePosChanged = true;
-        }
-
-
-    }
-
-    private void SetAimingBelowPlayerAnims()
-    {
-        if (inputVector.z > 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(backAnimString, animationCrossfadeDuration);
-        }
-        if (inputVector.z < 0)
-        {
-            mousePosChanged = false;
+            setToForward = true;
             animator.CrossFade(forwardAnimString, animationCrossfadeDuration);
         }
-        if (inputVector.x > 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(leftAnimString, animationCrossfadeDuration);
-        }
-        if (inputVector.x < 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(rightAnimString, animationCrossfadeDuration);
-        }
-    }
+       
 
-    private void SetAimingLeftOfPlayerAnims()
-    {
-        if (inputVector.z > 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(rightAnimString, animationCrossfadeDuration);
-        }
-        if (inputVector.z < 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(leftAnimString, animationCrossfadeDuration);
-        }
-        if (inputVector.x > 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(backAnimString, animationCrossfadeDuration);
-        }
-        if (inputVector.x < 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(forwardAnimString, animationCrossfadeDuration);
-        }
-    }
-
-    private void SetAimingRightOfPlayerAnims()
-    {
-        if (inputVector.z > 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(leftAnimString, animationCrossfadeDuration);
-        }
-        if (inputVector.z < 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(rightAnimString, animationCrossfadeDuration);
-        }
-        if (inputVector.x > 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(forwardAnimString, animationCrossfadeDuration);
-        }
-        if (inputVector.x < 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(backAnimString, animationCrossfadeDuration);
-        }
-    }
-
-    private void SetAimingAbovePlayerAnims()
-    {
-        if (inputVector.z > 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(forwardAnimString, animationCrossfadeDuration);
-        }
-        if (inputVector.z < 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(backAnimString, animationCrossfadeDuration);
-        }
-        if (inputVector.x > 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(rightAnimString, animationCrossfadeDuration);
-        }
-        if (inputVector.x < 0)
-        {
-            mousePosChanged = false;
-            animator.CrossFade(leftAnimString, animationCrossfadeDuration);
-        }
     }
 
     private void GetInput()
@@ -195,7 +70,11 @@ public class PlayerController : MonoBehaviour
 
     private void HandleRotation()
     {
-        transform.LookAt(mousePos);
+        if (inputVector.magnitude > 0.1f) // Make sure there is meaningful input
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(transform.forward);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 200f * Time.deltaTime);
+        }
     }
 
     private void HandleMovement()
