@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.AI.Navigation;
 using UnityEngine;
 
 public class MazeGenerator : MonoBehaviour
@@ -10,30 +11,61 @@ public class MazeGenerator : MonoBehaviour
     [SerializeField] private int mazeDepth;
 
     [SerializeField] private GameObject playerPrefab;
+    [SerializeField] private EnemySpawner enemySpawnerPrefab;
 
     private MazeCell[,] mazeGrid;
 
     private void Start()
     {
         mazeGrid = new MazeCell[mazeWidth,mazeDepth];
-        for (int x = 0; x < mazeWidth; x++)
-        {
-            for (int z = 0; z < mazeDepth; z++)
-            {
-                mazeGrid[x,z] = Instantiate(
-                    mazeCellPrefab,
-                    new Vector3(
-                        x * mazeCellPrefab.transform.localScale.x,
-                        0,
-                        z * mazeCellPrefab.transform.localScale.z
-                        )
-                    ,Quaternion.identity);
-            }
-        }
-        GenerateMaze(null, mazeGrid[0,0]);
+        //for (int x = 0; x < mazeWidth; x++)
+        //{
+        //    for (int z = 0; z < mazeDepth; z++)
+        //    {
+        //        mazeGrid[x,z] = Instantiate(
+        //            mazeCellPrefab,
+        //            new Vector3(
+        //                x * mazeCellPrefab.transform.localScale.x,
+        //                0,
+        //                z * mazeCellPrefab.transform.localScale.z
+        //                )
+        //            ,Quaternion.identity);
+        //        mazeGrid[x, z].transform.SetParent(transform);
+        //    }
+        //}
+        //GenerateMaze(null, mazeGrid[0,0]);
+        LoadMaze();
         SpawnPlayerAtCenter();
+        CreateEnemySpawners();
     }
 
+    private void LoadMaze()
+    {
+        // Initialize the mazeGrid array with the correct size
+        mazeGrid = new MazeCell[mazeWidth, mazeDepth];
+
+        // Loop through all the children of the mazeParent (the saved maze)
+        foreach (Transform child in transform)
+        {
+            // Get the scale of the maze cell
+            float xScale = child.localScale.x;
+            float zScale = child.localScale.z;
+
+            // Get the position of the child
+            // Adjust the x and z indices by dividing by the scale factor
+            int x = Mathf.RoundToInt(child.position.x / xScale); // Adjust x based on scale
+            int z = Mathf.RoundToInt(child.position.z / zScale); // Adjust z based on scale
+
+            // Cast the child to a MazeCell (assuming it has a MazeCell component)
+            MazeCell mazeCell = child.GetComponent<MazeCell>();
+
+            if (mazeCell != null && x >= 0 && x < mazeWidth && z >= 0 && z < mazeDepth)
+            {
+                // Place the maze cell in the correct spot in the mazeGrid
+                mazeGrid[x, z] = mazeCell;
+            }
+        }
+    }
     private void SpawnPlayerAtCenter()
     {
         // Calculate the center indices of the maze grid
@@ -52,6 +84,45 @@ public class MazeGenerator : MonoBehaviour
 
         // Instantiate the player at the center position
         playerPrefab.transform.position = centerPosition;
+    }
+
+    private void CreateEnemySpawners()
+    {
+        Debug.Log("Creating EnemySpawners");
+        for (int x = 2; x < mazeWidth - 2; x += 4) // Start at index 2 for the border
+        {
+            for (int z = 2; z < mazeDepth - 2; z += 4) // Place every 4 blocks, with a 2-block buffer
+            {
+                // Calculate the spawner's position at the center of the cell
+                Vector3 spawnerPosition = new Vector3(
+                    mazeGrid[x, z].transform.position.x,
+                    mazeGrid[x, z].transform.position.y,
+                    mazeGrid[x, z].transform.position.z
+                );
+
+                // Instantiate spawner
+                EnemySpawner enemySpawner = Instantiate(enemySpawnerPrefab, spawnerPosition, Quaternion.identity);
+                Debug.Log("!PLayer Transfom"+playerPrefab.transform);
+                enemySpawner.SetPlayerControllerTransform(playerPrefab.transform);
+
+                SetEnemySpawnerPatrolPoints(enemySpawner, x, z);
+            }
+        }
+    }
+
+    private void SetEnemySpawnerPatrolPoints(EnemySpawner enemySpawner, int startX, int startZ)
+    {
+        Transform point1 = mazeGrid[startX, startZ].transform;
+
+        int patrolGap = 4;
+
+        int endX = startX + patrolGap < mazeWidth ? startX + patrolGap : startX - patrolGap;
+        int endZ = startZ + patrolGap < mazeDepth ? startZ + patrolGap : startZ - patrolGap;
+
+        Transform point2 = mazeGrid[endX, endZ].transform;
+        Debug.Log("Setting Enemy Patrol Points");
+        enemySpawner.SetEnemyPatrolPoints(new Transform[] { point1, point2 });
+
     }
 
     private void GenerateMaze(MazeCell previousCell, MazeCell currentCell)

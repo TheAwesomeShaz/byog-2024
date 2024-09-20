@@ -15,10 +15,9 @@ public class InputManager : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButton(0))
         {
             OnShoot?.Invoke();
-            Debug.Log("OnShoot");
         }
     }
 

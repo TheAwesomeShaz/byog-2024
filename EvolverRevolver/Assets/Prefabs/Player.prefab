@@ -464,6 +464,7 @@ MonoBehaviour:
   shootImpactUpPoint: {fileID: 1585706496143418496}
   shootPoint: {fileID: 4495325151589619891}
   bulletPrefab: {fileID: 2519724928421423207, guid: a69759b0a78417f48aff1cc8e1636b5a, type: 3}
+  fireRate: 0.5
 --- !u!114 &5589325675215768966
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2380,9 +2381,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   inputManager: {fileID: 0}
-  rb: {fileID: 0}
-  moveSpeed: 5
   animator: {fileID: 48418471946648670}
+  gun: {fileID: 5891318917992373954}
+  moveSpeed: 5
+  dashSpeed: 15
+  dashTime: 0.1
+  dashCooldownTime: 0.2
   mouseLayerMask:
     serializedVersion: 2
     m_Bits: 8
@@ -2454,13 +2458,13 @@ CharacterController:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Height: 2
-  m_Radius: 0.5
+  m_Height: 1.8
+  m_Radius: 0.3
   m_SlopeLimit: 45
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: 0.8, z: 0}
 --- !u!1 &7098628157478711371
 GameObject:
   m_ObjectHideFlags: 0

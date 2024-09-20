@@ -8,16 +8,17 @@ using UnityEngine.Animations.Rigging;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private InputManager inputManager;
-    [SerializeField] private Rigidbody rb;
+    [SerializeField] private Animator animator;
+    [SerializeField] private Gun gun;
+
     [SerializeField] private float moveSpeed;
     [SerializeField] private float dashSpeed;
     [SerializeField] private float dashTime;
-    [SerializeField] private Animator animator;
+    [SerializeField] private float dashCooldownTime;
+
 
     [SerializeField] private LayerMask mouseLayerMask;
     [SerializeField] private CharacterController characterController;
-
-
 
     [Header("Animation Related")]
     [SerializeField] private float animationCrossfadeDuration = 0.7f;
@@ -37,28 +38,33 @@ public class PlayerController : MonoBehaviour
     private Vector3 inputVector;
     private Vector3 mousePos;
 
-    MousePosition currentMousePosition;
     private bool mousePosChanged = true;
     private bool setToForward;
     private float currentSpeed;
+    private bool canDash = true;
 
     private void Awake()
     {
-        inputManager.OnShoot += InputManager_OnShoot;
+        gun.OnBulletShot += Gun_OnBulletShot;
         currentSpeed = moveSpeed;
     }
 
-    private void InputManager_OnShoot()
+    private void Gun_OnBulletShot()
     {
+        HandleGunRecoilAnim();
+    }
 
+
+    private void HandleGunRecoilAnim()
+    {
         rightHandShootRig.weight = 1f;
         rightHandRig.weight = 0f;
 
-        DOTween.To(() => rightHandShootRig.weight, x => rightHandShootRig.weight = x, 0f, 0.07f) 
+        DOTween.To(() => rightHandShootRig.weight, x => rightHandShootRig.weight = x, 0f, 0.07f)
            .OnComplete(() =>
            {
                // Step 2: After the shoot rig reaches 0, smoothly set the right hand rig to 1
-               DOTween.To(() => rightHandRig.weight, x => rightHandRig.weight = x, 1f, 0.07f); 
+               DOTween.To(() => rightHandRig.weight, x => rightHandRig.weight = x, 1f, 0.07f);
            });
     }
 
@@ -75,13 +81,25 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(1))
         {
-            float startTime = Time.time;
-
-            while(Time.time < startTime+ dashTime)
+            if (canDash)
             {
-                currentSpeed = dashSpeed;
+                canDash = false;
+                StartCoroutine(Dash());
+                IEnumerator Dash()
+                {
+                    float startTime = Time.time;
+                    while(Time.time < startTime + dashTime)
+                    {
+                        currentSpeed = dashSpeed;
+
+                        yield return null;
+                    }
+                    currentSpeed = moveSpeed;
+                    yield return new WaitForSeconds(dashCooldownTime);
+                    canDash = true;
+
+                }
             }
-            currentSpeed = moveSpeed;
         }
     }
 
@@ -121,11 +139,6 @@ public class PlayerController : MonoBehaviour
         
     }
 
-    private void FixedUpdate()
-    {
-        //HandleMovement();
-    }
-
     private void HandleRotation()
     {
         var targetDirection = Vector3.zero;
@@ -147,18 +160,25 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void HandleMovement()
+
+
+    public void SetDashSpeed(float dashSpeed)
     {
-        rb.MovePosition(transform.position + (inputVector) * moveSpeed * Time.fixedDeltaTime);
+        this.dashSpeed = dashSpeed;
+    }
+
+    /// <summary>
+    /// Affects the Length of the Dash
+    /// </summary>
+    public void SetDashTime(float dashTime)
+    {
+        this.dashTime = dashTime;
+    }
+
+    public void SetDashCooldown(float dashCooldownTime)
+    {
+        this.dashCooldownTime = dashCooldownTime;
     }
 
 
-
-}
-public enum MousePosition
-{
-    AbovePlayer,
-    BelowPlayer,
-    LeftOfPlayer,
-    RightOfPlayer,
 }
