@@ -10,9 +10,13 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private InputManager inputManager;
     [SerializeField] private Rigidbody rb;
     [SerializeField] private float moveSpeed;
+    [SerializeField] private float dashSpeed;
+    [SerializeField] private float dashTime;
     [SerializeField] private Animator animator;
 
     [SerializeField] private LayerMask mouseLayerMask;
+    [SerializeField] private CharacterController characterController;
+
 
 
     [Header("Animation Related")]
@@ -36,11 +40,12 @@ public class PlayerController : MonoBehaviour
     MousePosition currentMousePosition;
     private bool mousePosChanged = true;
     private bool setToForward;
-
+    private float currentSpeed;
 
     private void Awake()
     {
         inputManager.OnShoot += InputManager_OnShoot;
+        currentSpeed = moveSpeed;
     }
 
     private void InputManager_OnShoot()
@@ -60,8 +65,32 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         GetInput();
+        HandleMovementUpdate();
         HandleRotation();
         HandleAnimations();
+        HandleDash();
+    }
+
+    private void HandleDash()
+    {
+        if (Input.GetMouseButtonDown(1))
+        {
+            float startTime = Time.time;
+
+            while(Time.time < startTime+ dashTime)
+            {
+                currentSpeed = dashSpeed;
+            }
+            currentSpeed = moveSpeed;
+        }
+    }
+
+    private void HandleMovementUpdate()
+    {
+        if (inputVector != Vector3.zero)
+        {
+           characterController.Move(transform.forward * currentSpeed * Time.deltaTime);
+        }
     }
 
     private void HandleAnimations()
@@ -94,7 +123,7 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        HandleMovement();
+        //HandleMovement();
     }
 
     private void HandleRotation()
